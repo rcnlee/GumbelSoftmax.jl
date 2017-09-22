@@ -5,10 +5,12 @@ using ReverseDiff
 const OP = [+, -, *, /] 
 
 X = collect(1:5) 
-gt(x) = x + 1 #(1,1,2)
-#gt(x) = x - 2  #(2,1,3)
-#gt(x) = x * 3  #(3,1,4)
-#gt(x) = x / 3  #(4,1,4)
+gt1(x) = x + 1 #(1,1,2)
+gt2(x) = x - 2  #(2,1,3)
+gt3(x) = x * 3  #(3,1,4)
+gt4(x) = x / 3  #(4,1,4)
+
+gt = gt3
 
 function f1(ps1, ps2, ps3, x)
     T = 0.3
@@ -33,7 +35,10 @@ function objective(ps1, ps2, ps3, x, y_target)
     abs2.(y_target - f1(ps1, ps2, ps3, x))
 end
 
-function learn(α=0.0002, N=5000)
+using DataFrames, PGFPlots, TikzPictures
+TikzPictures.standaloneWorkaround(true)
+function learn(α=0.0002, N=5000; track=false,
+               D=track ? DataFrame([Int, Int, Float64, Float64, Float64, Float64], [:iter, :node, :p1, :p2, :p3, :p4], 0) : oning)
     ps1 = ones(length(OP)) ./ length(OP)
     ps2 = ones(4) ./ 4
     ps3 = ones(4) ./ 4
@@ -43,6 +48,11 @@ function learn(α=0.0002, N=5000)
         @show ps1
         @show ps2
         @show ps3
+        if track
+            push!(D, vcat(i, 1, ps1))
+            push!(D, vcat(i, 2, ps2))
+            push!(D, vcat(i, 3, ps3))
+        end
         for j = 1:length(Y)
             g1, g2, g3, _, _ = ReverseDiff.gradient(objective, (ps1, ps2, ps3, [X[j]], [Y[j]]))
             #@show g
@@ -66,16 +76,20 @@ function learn(α=0.0002, N=5000)
             break
         end
     end
-    return indmax(ps1), indmax(ps2), indmax(ps3)
+    return D, indmax(ps1), indmax(ps2), indmax(ps3)
 end
 
-function test(n_seeds=5)
-    result = Tuple[] 
-    for s=1:n_seeds
-        srand(s)
-        imax = learn()
-        push!(result, imax)
+function plot_me(D::DataFrame)
+    g = GroupPlot(3, 1, groupStyle="horizontal sep=1.75cm, vertical sep=1.5cm")
+    for i = 1:3
+        ax = Axis([
+                   Plots.Linear(D[D[:node].==i,:][:p1], legendentry="node$i p1"),
+                   Plots.Linear(D[D[:node].==i,:][:p2], legendentry="node$i p2"),
+                   Plots.Linear(D[D[:node].==i,:][:p3], legendentry="node$i p3"),
+                   Plots.Linear(D[D[:node].==i,:][:p4], legendentry="node$i p4"),
+                  ])
+        push!(g, ax)
     end
-    result
+    save("main2.pdf", g)
+    save("main2.tex", g)
 end
-
