@@ -10,7 +10,7 @@ gt2(x) = x - 2  #(2,1,3)
 gt3(x) = x * 3  #(3,1,4)
 gt4(x) = x / 3  #(4,1,4)
 
-gt = gt3
+gt = gt1
 
 function f1(ps1, ps2, ps3, x)
     T = 0.3
@@ -38,7 +38,7 @@ end
 using DataFrames, PGFPlots, TikzPictures
 TikzPictures.standaloneWorkaround(true)
 function learn(α=0.0002, N=5000; track=false,
-               D=track ? DataFrame([Int, Int, Float64, Float64, Float64, Float64], [:iter, :node, :p1, :p2, :p3, :p4], 0) : oning)
+               D=track ? DataFrame([Int, Int, Float64, Float64, Float64, Float64], [:iter, :node, :p1, :p2, :p3, :p4], 0) : 0)
     ps1 = ones(length(OP)) ./ length(OP)
     ps2 = ones(4) ./ 4
     ps3 = ones(4) ./ 4
